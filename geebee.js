@@ -24,7 +24,7 @@ app.get('/', (req, res) => {
     res.send('GeeBee API is running');
 });
 
-// API routes (you'll create these files next)
+// API routes
 app.use('/user', require('./BackEnd/routes/userRoute'));
 // Add more routes as needed
 
