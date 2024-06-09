@@ -4,9 +4,37 @@ const User = require('../models/User');  // Assuming you have a User model
 // Create a new vacancy
 exports.createVacancy = async (req, res) => {
     try {
+        const data = {
+            title: req.body.title,
+            company: req.body.company,
+            description: req.body.description,
+            requirements: req.body.requirements,
+            qualifications: req.body.qualifications,
+            location: {
+                city: req.body.city ? req.body.city : null,
+                state: req.body.state ? req.body.state : null,
+                country: req.body.country ? req.body.country : null,
+                remote: req.body.remote ? true : false
+            },
+            salary: {
+                min: req.body.min ? req.body.min : null,
+                max: req.body.max ? req.body.max : null,
+                currency: req.body.currency ? req.body.currency : null,
+            },
+            employmentType: req.body.employmentType ? req.body.employmentType : null,
+            industry: req.body.industry ? req.body.industry : null,
+            skills: req.body.skills ? req.body.skills : null,
+            applicationDeadline: req.body.applicationDeadline ? req.body.applicationDeadline : null,
+            contact: {
+                email: req.body.email ? req.body.email : null,
+                phone: req.body.phone ? req.body.phone : null,
+                website: req.body.website ? req.body.website : null,
+            },
+        }
+
         const vacancy = new Vacancy({
-            ...req.body,
-            createdBy: req.user.id  // Assuming you have auth middleware that sets req.user
+            ...data,
+            createdBy: req.user.id
         });
 
         await vacancy.save();
@@ -62,10 +90,13 @@ exports.getVacancies = async (req, res) => {
 exports.searchVacancies = async (req, res) => {
     try {
         const { q } = req.query;
-        const vacancies = await Vacancy.find(
-            { $text: { $search: q } },
-            { score: { $meta: "textScore" } }
-        ).sort({ score: { $meta: "textScore" } });
+        const vacancies = await Vacancy.find({
+            $or: [
+                { company: { $regex: q, $options: 'i' } },
+                { description: { $regex: q, $options: 'i' } },
+                { employmentType: { $regex: q, $options: 'i' } },
+            ]
+        });
 
         res.json(vacancies);
     } catch (err) {
@@ -134,7 +165,7 @@ exports.deleteVacancy = async (req, res) => {
             return res.status(403).json({ error: 'Not authorized to delete this vacancy' });
         }
 
-        await vacancy.remove();
+        await vacancy.deleteOne();
         res.json({ message: 'Vacancy deleted successfully' });
     } catch (err) {
         console.error(err);
@@ -155,13 +186,17 @@ exports.applyToVacancy = async (req, res) => {
             return res.status(400).json({ error: 'This vacancy is no longer active' });
         }
 
-        // Assuming you have an Application model or you're tracking in the User model
-        // await Application.create({ user: req.user.id, vacancy: vacancy._id });
-        // OR
-        // await User.findByIdAndUpdate(req.user.id, { $push: { appliedJobs: vacancy._id } });
+        if (!vacancy.isVerified) {
+            return res.status(400).json({ error: 'You cannot apply to this vacancy because it is not verified.' });
+        }
 
         vacancy.applicantCount += 1;
+        vacancy.applicants.push(req.user._id)
         await vacancy.save();
+
+        req.user.applications.push(vacancy._id)
+
+        await req.user.save();
 
         res.json({ message: 'Application submitted successfully' });
     } catch (err) {
@@ -171,10 +206,22 @@ exports.applyToVacancy = async (req, res) => {
 };
 
 // Get vacancies posted by the authenticated user
-exports.getMyVacancies = async (req, res) => {
+exports.getPostedVacancies = async (req, res) => {
     try {
-        const vacancies = await Vacancy.find({ createdBy: req.user.id })
+        const vacancies = await Vacancy.find({ createdBy: req.user._id })
             .sort({ createdAt: -1 });
+
+        res.json(vacancies);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+// Get vacancies posted by the authenticated user
+exports.getAppliedVacancies = async (req, res) => {
+    try {
+        const vacancies = await Vacancy.find({ applicants: req.user._id })
 
         res.json(vacancies);
     } catch (err) {

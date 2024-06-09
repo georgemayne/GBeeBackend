@@ -113,7 +113,7 @@ exports.deleteUser = async (req, res) => {
             return res.status(404).json({ error: 'User not found' });
         }
 
-        await user.remove();  // Use remove() to trigger any pre-remove hooks
+        await user.deleteOne();
         res.json({ message: 'User deleted successfully' });
     } catch (err) {
         console.error(err);

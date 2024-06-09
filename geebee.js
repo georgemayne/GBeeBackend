@@ -26,6 +26,8 @@ app.get('/', (req, res) => {
 
 // API routes
 app.use('/user', require('./BackEnd/routes/userRoute'));
+app.use('/vacancies', require('./BackEnd/routes/vacancyRoute'));
+app.use('/admin', require('./BackEnd/routes/adminRoute'));
 // Add more routes as needed
 
 // 404 - Not Found
