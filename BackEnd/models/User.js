@@ -15,7 +15,7 @@ const UserSchema = new mongoose.Schema({
         unique: true,
         trim: true,
         lowercase: true,
-        match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Please add a valid email']
+        match: [/^\w+([\.-]?\w+)@\w+([\.-]?\w+)(\.\w{2,3})+$/, 'Please add a valid email']
     },
     password: {
         type: String,
@@ -28,6 +28,10 @@ const UserSchema = new mongoose.Schema({
         enum: ['user', 'admin'],
         default: 'user'
     },
+    applications: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Vacancy',
+    }],
     isVerified: {
         type: Boolean,
         default: false
