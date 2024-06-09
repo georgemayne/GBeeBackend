@@ -19,11 +19,8 @@ router.post('/login', [
     body('password').notEmpty().withMessage('Password is required')
 ], userController.login);
 
-// Protected routes (require authentication)
-// router.use(authMiddleware);
-
 // Get user data
-router.get('/me', userController.getUser);
+router.get('/me', authMiddleware, userController.getUser);
 
 // Update user data
 router.put('/me', [
@@ -33,9 +30,9 @@ router.put('/me', [
         .optional()
         .isLength({ min: 6 }).withMessage('Password must be at least 6 characters long')
         .matches(/\d/).withMessage('Password must contain at least one number')
-], userController.updateUser);
+], authMiddleware, userController.updateUser);
 
 // Delete user
-router.delete('/me', userController.deleteUser);
+router.delete('/me', authMiddleware, userController.deleteUser);
 
 module.exports = router;
