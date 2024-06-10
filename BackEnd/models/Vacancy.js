@@ -15,7 +15,7 @@ const VacancySchema = new mongoose.Schema({
     description: {
         type: String,
         required: [true, 'Job description is required'],
-        minlength: [50, 'Description must be at least 50 characters']
+        minlength: [10, 'Description must be at least 50 characters']
     },
     requirements: [{
         type: String,
